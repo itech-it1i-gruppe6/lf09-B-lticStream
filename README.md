@@ -65,6 +65,36 @@
 | 0/2/0  | 14.0.0.3 | fd00:4::3 / 32 |
 | 0/2/1  | none     | none           |
 
+## SSH
+
+### SSH Banner
+
+The banner is to be displayed on all layer 3 devices
+
+```txt
+***************************************************************
+*                                                             *
+*  UNAUTHORIZED ACCESS TO THIS DEVICE IS PROHIBITED           *
+*                                                             *
+*  This device belongs to Techniker Krankenkasse.             *
+*  If you are not an authorized user, disconnect immediately. *
+*                                                             *
+***************************************************************
+```
+
+### SSH passwords
+
+| Device       | Password            |
+| ------------ | ------------------- |
+| Router_HH_01 | hh_01_router_secret |
+| Router_HL_01 | hl_01_router_secret |
+| Router_B_01  | b_01_router_secret  |
+| Router_M_01  | m_01_router_secret  |
+| Switch_HH_01 | hh_01_switch_secret |
+| Switch_HL_01 | hl_01_switch_secret |
+| Switch_B_01  | b_01_switch_secret  |
+| Switch_M_01  | m_01_switch_secret  |
+
 ## TLDR config
 
 ### Cisco router
@@ -113,6 +143,24 @@ router-id <router_id>
 exit
 interface <interface_identifier>
 ipv6 ospf <process_id> area <area_id>
+```
+
+#### Generate ssh keys
+
+```bash
+enable
+configure terminal
+crypto key generate rsa general-keys modulus <key-size>
+```
+
+#### Set ssh password
+```bash
+enable
+configure terminal
+line vty 0 15
+transport input ssh
+password <your-password>
+login
 ```
 
 #### Save Configuration
