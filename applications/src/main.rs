@@ -1,42 +1,38 @@
-use std::{error::Error, result};
+use std::collections::HashMap;
 
-fn main() {
-    println!("Jakob der Kaffeholer.");
-    let mut jakob: u32 = 42;
-    jakob = jakob + 1;
-    let mut kosta = Human::new("kosta".into());
-    kosta.birthday();
-    println!("jakob: {}, kosta: {:?}", jakob, kosta);
+use anyhow::Result;
+use reqwest;
+use serde_json;
+use serde_json::Value;
 
-    let maybe_string: OptionString = OptionString::Some("Kosta war ungezogen".into());
-    match maybe_string {
-        OptionString::None => println!("String is None"),
-        OptionString::Some(txt) => println!("{}", txt),
-    }
-}
-#[derive(Debug)]
-struct Human {
-    pub name: String,
-    age: usize,
-}
+use crate::cisco::TicketResponse;
+mod cisco;
 
-impl Human {
-    pub fn new(name: String) -> Human {
-        Human { name: name, age: 0 }
-    }
-    pub fn birthday(&mut self) {
-        self.age = self.age + 1;
-    }
-}
+#[tokio::main]
+async fn main() -> Result<()> {
+    let mut map = HashMap::new();
+    map.insert("password", "test");
+    map.insert("username", "test");
+    let client = reqwest::Client::new();
+    let res: Value = client
+        .post("http://localhost:58000/api/v1/ticket")
+        .json(&map)
+        .send()
+        .await?
+        .json()
+        .await?;
+    let json: TicketResponse = serde_json::from_value(res)?;
+    println!("ticket = {}", &json.response.service_ticket);
 
-enum OptionString {
-    None,
-    Some(String),
-}
+    let devices: Value = client
+        .get("http://localhost:58000/api/v1/network-device")
+        .header("X-Auth-Token", &json.response.service_ticket)
+        .send()
+        .await?
+        .json()
+        .await?;
 
-fn is_even_uint(number: isize) -> Result<bool, String> {
-    if number < 0 {
-        return Err("Canno't handle negative integer".into());
-    }
-    return Ok(number % 2 == 0);
+    println!("devices = {:?}", devices);
+
+    Ok(())
 }
