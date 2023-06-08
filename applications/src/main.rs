@@ -5,6 +5,7 @@ use reqwest;
 use serde_json;
 use serde_json::Value;
 
+use crate::cisco::AllDevicesResponse;
 use crate::cisco::TicketResponse;
 mod cisco;
 
@@ -31,8 +32,9 @@ async fn main() -> Result<()> {
         .await?
         .json()
         .await?;
+    let vec_devices: AllDevicesResponse = serde_json::from_value(devices).unwrap();
 
-    println!("devices = {:?}", devices);
+    println!("device = {:?}", &vec_devices.response[0]);
 
     Ok(())
 }
