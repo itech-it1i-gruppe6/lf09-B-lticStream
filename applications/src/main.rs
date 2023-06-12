@@ -1,103 +1,54 @@
-use std::collections::HashMap;
+use iced::executor;
+use iced::widget::{button, column, text};
+use iced::{Application, Command, Element, Settings, Theme};
 
-use anyhow::Ok;
-use anyhow::Result;
-use reqwest;
-use reqwest::Client;
-use serde_json;
-use serde_json::Value;
-
-use crate::cisco::AllDevicesResponse;
-use crate::cisco::DeviceIp;
-use crate::cisco::HostCount;
-use crate::cisco::TicketResponse;
-mod cisco;
-
-#[tokio::main]
-async fn main() -> Result<()> {
-    let client = reqwest::Client::new();
-    let ticket = get_ticket(&client).await.unwrap();
-    get_all_devices(&client, &ticket).await.unwrap();
-    get_all_clients(&client, &ticket).await.unwrap();
-    get_device_ip(&client, &ticket).await.unwrap();
-    get_host_count(&client, &ticket).await.unwrap();
-    Ok(())
+fn main() -> iced::Result {
+    Counter::run(Settings::default())
 }
 
-async fn get_ticket(client: &Client) -> Result<String> {
-    let mut map = HashMap::new();
-    map.insert("password", "test");
-    map.insert("username", "test");
-    let res: Value = client
-        .post("http://localhost:58000/api/v1/ticket")
-        .json(&map)
-        .send()
-        .await?
-        .json()
-        .await?;
-    let json: TicketResponse = serde_json::from_value(res)?;
-    println!("ticket = {}\n", &json.response.service_ticket);
-
-    Ok(json.response.service_ticket)
+struct Counter {
+    value: i32,
 }
 
-async fn get_all_devices(client: &Client, ticket: &String) -> Result<()> {
-    let devices: Value = client
-        .get("http://localhost:58000/api/v1/network-device")
-        .header("X-Auth-Token", ticket)
-        .send()
-        .await?
-        .json()
-        .await?;
-    let vec_devices: AllDevicesResponse = serde_json::from_value(devices).unwrap();
-
-    println!("device = {:?}\n", &vec_devices.response[0]);
-
-    Ok(())
+#[derive(Debug, Clone, Copy)]
+pub enum Message {
+    IncrementPressed,
+    DecrementPressed,
 }
 
-async fn get_all_clients(client: &Client, ticket: &String) -> Result<()> {
-    let clients: Value = client
-        .get("http://localhost:58000/api/v1/network-device?hostType=Pc")
-        .header("X-Auth-Token", ticket)
-        //.header("hostType", "Pc")
-        .send()
-        .await?
-        .json()
-        .await?;
-    let vec_clients: AllDevicesResponse = serde_json::from_value(clients).unwrap();
+impl Application for Counter {
+    type Executor = executor::Default;
+    type Flags = ();
+    type Message = Message;
+    type Theme = Theme;
 
-    println!("client = {:?}\n", &vec_clients.response);
+    fn new(_flags: ()) -> (Counter, Command<Self::Message>) {
+        (Counter { value: 0 }, Command::none())
+    }
 
-    Ok(())
-}
+    fn title(&self) -> String {
+        String::from("Banane")
+    }
 
-async fn get_device_ip(client: &Client, ticket: &String) -> Result<()> {
-    let device_ip: Value = client
-        .get("http://localhost:58000/api/v1/network-device/ip-address/192.168.1.1")
-        .header("X-Auth-Token", ticket)
-        .send()
-        .await?
-        .json()
-        .await?;
-    let vec_device_ip: DeviceIp = serde_json::from_value(device_ip).unwrap();
+    fn view(&self) -> Element<Self::Message> {
+        column![
+            button("+").on_press(Message::IncrementPressed),
+            text(self.value).size(50),
+            button("-").on_press(Message::DecrementPressed),
+        ]
+        .into()
+    }
 
-    println!("deviceIp = {:?}\n", &vec_device_ip);
-
-    Ok(())
-}
-
-async fn get_host_count(client: &Client, ticket: &String) -> Result<()> {
-    let host_count: Value = client
-        .get("http://localhost:58000/api/v1/host/count?hostType=Pc")
-        .header("X-Auth-Token", ticket)
-        .send()
-        .await?
-        .json()
-        .await?;
-    let vec_host_count: HostCount = serde_json::from_value(host_count).unwrap();
-
-    println!("hostCount = {:?}\n", &vec_host_count.response);
-
-    Ok(())
+    fn update(&mut self, message: Message) -> Command<Self::Message> {
+        match message {
+            Message::IncrementPressed => {
+                self.value += 1;
+                Command::none()
+            }
+            Message::DecrementPressed => {
+                self.value -= 1;
+                Command::none()
+            }
+        }
+    }
 }
