@@ -1,0 +1,8 @@
+[workspace]
+
+members = [
+    "streamline_app",
+    "streamline_cli",
+    "streamline_cisco",
+]
+resolver = "2"
