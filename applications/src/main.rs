@@ -1,7 +1,5 @@
-use iced::executor;
 use iced::widget::{button, column, row, text, text_input};
-use iced::{Application, Command, Element, Settings, Theme};
-use iced_futures;
+use iced::{Application, Command, Element, Settings, Theme, executor};
 
 fn main() -> iced::Result {
     Mainpage::run(Settings::default())
@@ -21,7 +19,7 @@ pub enum Message {
 }
 
 impl Application for Mainpage {
-    type Executor = iced_futures::backend::native::tokio;
+    type Executor = executor::Default;
     type Flags = ();
     type Message = Message;
     type Theme = Theme;
@@ -71,45 +69,5 @@ impl Application for Mainpage {
             Message::GetAllDevicesClick => Command::none(),
             Message::GetHostCountClick => Command::none(),
         }
-    }
-
-    fn theme(&self) -> Self::Theme {
-        Self::Theme::default()
-    }
-
-    fn style(&self) -> <Self::Theme as iced::application::StyleSheet>::Style {
-        <Self::Theme as iced::application::StyleSheet>::Style::default()
-    }
-
-    fn subscription(&self) -> iced::Subscription<Self::Message> {
-        iced::Subscription::none()
-    }
-
-    fn scale_factor(&self) -> f64 {
-        1.0
-    }
-
-    fn run(settings: Settings<Self::Flags>) -> iced::Result
-    where
-        Self: 'static,
-    {
-        #[allow(clippy::needless_update)]
-        let renderer_settings = iced::renderer::Settings {
-            default_font: settings.default_font,
-            default_text_size: settings.default_text_size,
-            text_multithreading: settings.text_multithreading,
-            antialiasing: if settings.antialiasing {
-                Some(iced::renderer::settings::Antialiasing::MSAAx4)
-            } else {
-                None
-            },
-            ..iced::renderer::Settings::from_env()
-        };
-
-        Ok(iced::runtime::application::run::<
-            Instance<Self>,
-            Self::Executor,
-            iced::renderer::window::Compositor<Self::Theme>,
-        >(settings.into(), renderer_settings)?)
     }
 }
