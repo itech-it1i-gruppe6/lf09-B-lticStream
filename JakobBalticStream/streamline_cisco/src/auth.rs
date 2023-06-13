@@ -12,8 +12,8 @@ pub struct LoginCredentials {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginRespone {
-    response: CiscoToken,
-    version: String,
+    pub response: CiscoToken,
+    pub version: String,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]
